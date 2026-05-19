@@ -16,7 +16,10 @@ Model: meta-llama/llama-3.2-3b-instruct:free (set in __init__).
 """
 
 import os
+import time
+
 from openai import OpenAI
+from openai import APIStatusError, RateLimitError
 
 
 class Agent:
@@ -51,16 +54,43 @@ class Agent:
         bar = "=" * 72
         print(f"\n{bar}\n[{label}]\n{bar}\n{text}\n", flush=True)
 
-    def call_llm(self, prompt: str) -> str:
-        """Send `prompt` to the LLM via OpenRouter and return the raw text."""
+    def call_llm(self, prompt: str, max_retries: int = 5) -> str:
+        """Send `prompt` to the LLM via OpenRouter and return the raw text.
+
+        Retries on HTTP 429 (rate limit) using the provider's Retry-After
+        hint, with exponential backoff as a fallback. Free OpenRouter
+        models share quotas across all users and get rate-limited often.
+        """
         self.log("LLM PROMPT", prompt)
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        content = response.choices[0].message.content
-        self.log("LLM RESPONSE", content)
-        return content
+        delay = 5
+        for attempt in range(1, max_retries + 1):
+            try:
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[{"role": "user", "content": prompt}],
+                )
+                content = response.choices[0].message.content
+                self.log("LLM RESPONSE", content)
+                return content
+            except (RateLimitError, APIStatusError) as e:
+                status = getattr(e, "status_code", None)
+                if status != 429 or attempt == max_retries:
+                    raise
+                wait = delay
+                try:
+                    body = getattr(e, "response", None)
+                    if body is not None:
+                        retry_after = body.headers.get("retry-after")
+                        if retry_after:
+                            wait = int(float(retry_after))
+                except Exception:
+                    pass
+                self.log(
+                    "RATE LIMITED",
+                    f"attempt {attempt}/{max_retries}, sleeping {wait}s",
+                )
+                time.sleep(wait)
+                delay = min(delay * 2, 60)
 
     def propose_code(self, current_code: str, last_result: dict) -> str:
         """Build a prompt from the current code + last benchmark result,
