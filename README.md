@@ -13,16 +13,14 @@
 
 ## 二、環境設定
 
-本作業預設使用 **OpenRouter** 當 LLM 入口 — 一支 key 可以切換 Claude / GPT /
-Gemini / Llama 等所有 model,而且**有免費 model 可用,$0 也能完成作業**。
+本作業使用 **NCHC GenAI 入口**(國網中心)作為 LLM 服務。
 
 ```bash
 # 1. 安裝套件
 pip install -r requirements.txt
 
-# 2. 註冊 OpenRouter 並拿 API key
-#    https://openrouter.ai/keys
-export OPENROUTER_API_KEY=sk-or-...
+# 2. 申請 NCHC GenAI API key,然後設環境變數
+export NCHC_API_KEY=...
 
 # 3. 先跑一次確認 baseline 能動
 python runner/run.py
@@ -32,8 +30,17 @@ python runner/run.py
 
 ### Model
 
-使用 `meta-llama/llama-3.2-3b-instruct:free`(免費)。在 `agent/agent_template.py`
-的 `Agent.__init__` 已設好。
+預設 `Llama3.1-8B-Instruct`,已在 `agent/agent_template.py` 的 `Agent.__init__`
+設好。端點 `https://portal.genai.nchc.org.tw/api/v1/chat/completions`,
+auth 用 `x-api-key` header。
+
+確認可用 model 清單:
+
+```bash
+curl -X GET "https://portal.genai.nchc.org.tw/api/v1/models" \
+     -H "x-api-key: $NCHC_API_KEY" \
+     -H "Content-Type: application/json"
+```
 
 ---
 
@@ -57,8 +64,8 @@ python runner/run.py
 
 | 方法 | 你要做的事 |
 |---|---|
-| `__init__` | 已內建 OpenRouter client。你可以再加路徑、歷史紀錄、best-score tracker |
-| `call_llm(prompt)` | 已實作好(透過 OpenRouter)。可以加 retry、timeout、token 計數 |
+| `__init__` | 已內建 NCHC client。你可以再加路徑、歷史紀錄、best-score tracker |
+| `call_llm(prompt)` | 已實作好(透過 NCHC GenAI,含 429 retry)。可以加 timeout、token 計數 |
 | `propose_code(current_code, last_result)` | 組 prompt → call_llm → 解析回應 → 回傳純 Python source |
 | `write_candidate(code)` | 把 source 寫進 `agent/candidate.py` |
 | `evaluate()` | 載入 candidate,呼叫 `benchmark.eval.evaluate(...)`,回傳結果 dict |

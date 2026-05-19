@@ -1,41 +1,43 @@
 """
 Skeleton for the optimization agent.
 
-The LLM client is wired up to OpenRouter so students don't have to deal
-with HTTP plumbing. Everything else — prompt design, code extraction, the
-iteration loop, error handling — is left for the student to implement.
+The LLM client is wired up to the NCHC GenAI portal so students don't have
+to deal with HTTP plumbing. Everything else — prompt design, code
+extraction, the iteration loop, error handling — is left for the student
+to implement.
 
 A `log()` helper is provided. Use it liberally in your implementation so
 every intermediate step (prompts, LLM responses, extracted code, eval
 results) is visible in the console while the agent runs.
 
 Set your key first:
-    export OPENROUTER_API_KEY=sk-or-...
+    export NCHC_API_KEY=...
 
-Model: meta-llama/llama-3.2-3b-instruct:free (set in __init__).
+Model: Llama3.1-8B-Instruct (set in __init__).
+Endpoint: https://portal.genai.nchc.org.tw/api/v1 (OpenAI-compatible).
 """
 
 import os
 import time
 
-from openai import OpenAI
-from openai import APIStatusError, RateLimitError
+import requests
+
+
+NCHC_BASE_URL = "https://portal.genai.nchc.org.tw/api/v1"
 
 
 class Agent:
     def __init__(
         self,
-        model: str = "meta-llama/llama-3.2-3b-instruct:free",
+        model: str = "Llama3.1-8B-Instruct",
         max_iterations: int = 3,
         verbose: bool = True,
     ):
         self.model = model
         self.max_iterations = max_iterations
         self.verbose = verbose
-        self.client = OpenAI(
-            api_key=os.environ["OPENROUTER_API_KEY"],
-            base_url="https://openrouter.ai/api/v1",
-        )
+        self.api_key = os.environ["NCHC_API_KEY"]
+        self.base_url = NCHC_BASE_URL
         self.log("AGENT INIT", f"model={model}  max_iterations={max_iterations}")
         # TODO: store paths, best-score tracker, history, etc.
 
@@ -55,42 +57,40 @@ class Agent:
         print(f"\n{bar}\n[{label}]\n{bar}\n{text}\n", flush=True)
 
     def call_llm(self, prompt: str, max_retries: int = 5) -> str:
-        """Send `prompt` to the LLM via OpenRouter and return the raw text.
+        """Send `prompt` to the LLM via the NCHC GenAI portal and return
+        the raw text.
 
-        Retries on HTTP 429 (rate limit) using the provider's Retry-After
-        hint, with exponential backoff as a fallback. Free OpenRouter
-        models share quotas across all users and get rate-limited often.
+        Retries on HTTP 429 (rate limit) using the server's Retry-After
+        hint, with exponential backoff as a fallback.
         """
         self.log("LLM PROMPT", prompt)
+        url = f"{self.base_url}/chat/completions"
+        headers = {
+            "x-api-key": self.api_key,
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "model": self.model,
+            "messages": [{"role": "user", "content": prompt}],
+        }
         delay = 5
         for attempt in range(1, max_retries + 1):
-            try:
-                response = self.client.chat.completions.create(
-                    model=self.model,
-                    messages=[{"role": "user", "content": prompt}],
-                )
-                content = response.choices[0].message.content
+            response = requests.post(url, headers=headers, json=payload, timeout=120)
+            if response.status_code == 200:
+                content = response.json()["choices"][0]["message"]["content"]
                 self.log("LLM RESPONSE", content)
                 return content
-            except (RateLimitError, APIStatusError) as e:
-                status = getattr(e, "status_code", None)
-                if status != 429 or attempt == max_retries:
-                    raise
-                wait = delay
-                try:
-                    body = getattr(e, "response", None)
-                    if body is not None:
-                        retry_after = body.headers.get("retry-after")
-                        if retry_after:
-                            wait = int(float(retry_after))
-                except Exception:
-                    pass
+            if response.status_code == 429 and attempt < max_retries:
+                wait = int(response.headers.get("Retry-After", delay))
                 self.log(
                     "RATE LIMITED",
                     f"attempt {attempt}/{max_retries}, sleeping {wait}s",
                 )
                 time.sleep(wait)
                 delay = min(delay * 2, 60)
+                continue
+            response.raise_for_status()
+        raise RuntimeError(f"call_llm failed after {max_retries} attempts")
 
     def propose_code(self, current_code: str, last_result: dict) -> str:
         """Build a prompt from the current code + last benchmark result,
