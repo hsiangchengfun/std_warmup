@@ -26,7 +26,7 @@ from baseline.task import run_task as baseline_run_task
 from benchmark.eval import evaluate
 
 
-MAX_ITERATIONS = 3
+MAX_ITERATIONS = 10
 DATA_PATH = PROJECT_ROOT / "data" / "input.json"
 CANDIDATE_PATH = PROJECT_ROOT / "agent" / "candidate.py"
 

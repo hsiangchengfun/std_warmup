@@ -30,7 +30,7 @@ class Agent:
     def __init__(
         self,
         model: str = "Llama-3.1-8B-Instruct",
-        max_iterations: int = 3,
+        max_iterations: int = 10,
         verbose: bool = True,
     ):
         self.model = model
