@@ -13,7 +13,7 @@ results) is visible in the console while the agent runs.
 Set your key first:
     export NCHC_API_KEY=...
 
-Model: Llama3.1-8B-Instruct (set in __init__).
+Model: Llama-3.1-8B-Instruct (set in __init__).
 Endpoint: https://portal.genai.nchc.org.tw/api/v1 (OpenAI-compatible).
 """
 
@@ -29,7 +29,7 @@ NCHC_BASE_URL = "https://portal.genai.nchc.org.tw/api/v1"
 class Agent:
     def __init__(
         self,
-        model: str = "Llama3.1-8B-Instruct",
+        model: str = "Llama-3.1-8B-Instruct",
         max_iterations: int = 3,
         verbose: bool = True,
     ):

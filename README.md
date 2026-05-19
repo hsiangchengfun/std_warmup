@@ -30,7 +30,7 @@ python runner/run.py
 
 ### Model
 
-預設 `Llama3.1-8B-Instruct`,已在 `agent/agent_template.py` 的 `Agent.__init__`
+預設 `Llama-3.1-8B-Instruct`,已在 `agent/agent_template.py` 的 `Agent.__init__`
 設好。端點 `https://portal.genai.nchc.org.tw/api/v1/chat/completions`,
 auth 用 `x-api-key` header。
 
