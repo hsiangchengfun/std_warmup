@@ -1,10 +1,9 @@
 """
 Skeleton for the optimization agent.
 
-The LLM client is wired up to OpenRouter by default so students can swap
-between free and paid models without touching any other code. Everything
-else — prompt design, code extraction, the iteration loop, error handling —
-is left for the student to implement.
+The LLM client is wired up to OpenRouter so students don't have to deal
+with HTTP plumbing. Everything else — prompt design, code extraction, the
+iteration loop, error handling — is left for the student to implement.
 
 A `log()` helper is provided. Use it liberally in your implementation so
 every intermediate step (prompts, LLM responses, extracted code, eval
@@ -13,8 +12,7 @@ results) is visible in the console while the agent runs.
 Set your key first:
     export OPENROUTER_API_KEY=sk-or-...
 
-Default model is a free one (Llama 3.2 3B). To use a stronger model just
-change `self.model`, e.g. "anthropic/claude-haiku-4-5".
+Model: meta-llama/llama-3.2-3b-instruct:free (set in __init__).
 """
 
 import os

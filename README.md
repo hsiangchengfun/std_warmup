@@ -30,20 +30,10 @@ python runner/run.py
 
 此時還沒有 agent,runner 會用 baseline 自己跟自己比,分數穩定在 1.0 附近。
 
-### Model 選擇
+### Model
 
-打開 `agent/agent_template.py`,在 `Agent.__init__` 改 `self.model`:
-
-| Model | 費用 | 預期分數天花板 |
-|---|---|---|
-| `meta-llama/llama-3.2-3b-instruct:free` (預設) | $0 | ~5–10× |
-| `google/gemini-2.0-flash` | 便宜 | ~50× |
-| `openai/gpt-4o-mini` | 便宜 | ~50× |
-| `anthropic/claude-haiku-4-5` | 中等 | ~100× |
-| `anthropic/claude-sonnet-4-6` | 較貴 | ~500×+ |
-
-**建議**:先用 free 模型把流程通,再用付費模型衝高分。OpenRouter 註冊送 $1
-試用額度,加上 free 模型,沒花錢也能拿到不錯的成績。
+使用 `meta-llama/llama-3.2-3b-instruct:free`(免費)。在 `agent/agent_template.py`
+的 `Agent.__init__` 已設好。
 
 ---
 
