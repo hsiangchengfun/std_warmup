@@ -13,7 +13,7 @@ results) is visible in the console while the agent runs.
 Set your key first:
     export OPENROUTER_API_KEY=sk-or-...
 
-Default model is a free one (GPT-OSS 20B). To use a stronger model just
+Default model is a free one (Llama 3.2 3B). To use a stronger model just
 change `self.model`, e.g. "anthropic/claude-haiku-4-5".
 """
 
@@ -24,7 +24,7 @@ from openai import OpenAI
 class Agent:
     def __init__(
         self,
-        model: str = "openai/gpt-oss-20b:free",
+        model: str = "meta-llama/llama-3.2-3b-instruct:free",
         max_iterations: int = 3,
         verbose: bool = True,
     ):
