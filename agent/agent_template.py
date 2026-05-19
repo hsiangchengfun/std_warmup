@@ -36,9 +36,17 @@ class Agent:
         self.model = model
         self.max_iterations = max_iterations
         self.verbose = verbose
-        self.api_key = os.environ["NCHC_API_KEY"]
+        self.api_key = os.environ.get("NCHC_API_KEY", "").strip()
+        if not self.api_key:
+            raise RuntimeError(
+                "NCHC_API_KEY is not set. Run: export NCHC_API_KEY=<your-key>"
+            )
         self.base_url = NCHC_BASE_URL
-        self.log("AGENT INIT", f"model={model}  max_iterations={max_iterations}")
+        masked = f"{self.api_key[:4]}...{self.api_key[-4:]} (len={len(self.api_key)})"
+        self.log(
+            "AGENT INIT",
+            f"model={model}  max_iterations={max_iterations}  key={masked}",
+        )
         # TODO: store paths, best-score tracker, history, etc.
 
     def log(self, label: str, content, max_len: int = 4000) -> None:
@@ -80,6 +88,16 @@ class Agent:
                 content = response.json()["choices"][0]["message"]["content"]
                 self.log("LLM RESPONSE", content)
                 return content
+            if response.status_code == 401:
+                self.log(
+                    "AUTH FAILED (401)",
+                    "Server rejected NCHC_API_KEY. Check:\n"
+                    "  1. echo $NCHC_API_KEY  (is it set in this shell?)\n"
+                    "  2. no trailing newline / quotes when exported\n"
+                    "  3. key is active at portal.genai.nchc.org.tw\n"
+                    f"server said: {response.text[:300]}",
+                )
+                response.raise_for_status()
             if response.status_code == 429 and attempt < max_retries:
                 wait = int(response.headers.get("Retry-After", delay))
                 self.log(
