@@ -25,7 +25,7 @@ class Agent:
     def __init__(
         self,
         model: str = "openai/gpt-oss-20b:free",
-        max_iterations: int = 10,
+        max_iterations: int = 3,
         verbose: bool = True,
     ):
         self.model = model
