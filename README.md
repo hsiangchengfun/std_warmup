@@ -36,7 +36,7 @@ python runner/run.py
 
 | Model | 費用 | 預期分數天花板 |
 |---|---|---|
-| `meta-llama/llama-3.1-8b-instruct:free` (預設) | $0 | ~5–10× |
+| `openai/gpt-oss-20b:free` (預設) | $0 | ~5–10× |
 | `google/gemini-2.0-flash` | 便宜 | ~50× |
 | `openai/gpt-4o-mini` | 便宜 | ~50× |
 | `anthropic/claude-haiku-4-5` | 中等 | ~100× |

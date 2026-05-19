@@ -9,7 +9,7 @@ is left for the student to implement.
 Set your key first:
     export OPENROUTER_API_KEY=sk-or-...
 
-Default model is a free one (Llama 3.1 8B). To use a stronger model just
+Default model is a free one (GPT-OSS 20B). To use a stronger model just
 change `self.model`, e.g. "anthropic/claude-haiku-4-5".
 """
 
@@ -20,7 +20,7 @@ from openai import OpenAI
 class Agent:
     def __init__(
         self,
-        model: str = "meta-llama/llama-3.1-8b-instruct:free",
+        model: str = "openai/gpt-oss-20b:free",
         max_iterations: int = 10,
     ):
         self.model = model
